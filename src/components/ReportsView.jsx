@@ -120,8 +120,7 @@ export default function ReportsView({ projects, tasks }) {
         <div className="reports-filter-group">
           <span className="reports-filter-label">Search</span>
           <div className="search-box" style={{ width: 180 }}>
-            <span className="search-icon">🔍</span>
-            <input type="text" placeholder="Task or project..." value={search} onChange={e => setSearch(e.target.value)} />
+            <input type="text" placeholder="Search tasks or projects..." value={search} onChange={e => setSearch(e.target.value)} />
           </div>
         </div>
         <div className="reports-filter-group">
