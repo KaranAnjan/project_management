@@ -17,6 +17,7 @@ export default function App() {
   const [selectedProject, setSelectedProject] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeDepartment, setActiveDepartment] = useState('all')
+  const [subtaskFilterTaskId, setSubtaskFilterTaskId] = useState(null)
 const members = getMembers()
 
   const filteredByDept = useMemo(() => {
@@ -79,6 +80,12 @@ const members = getMembers()
   const handleNavigate = useCallback((view) => {
     setActiveView(view)
     if (view !== 'project') setSelectedProject(null)
+    if (view !== 'subtasks') setSubtaskFilterTaskId(null)
+  }, [])
+
+  const handleSubtaskClick = useCallback((taskId) => {
+    setSubtaskFilterTaskId(taskId)
+    setActiveView('subtasks')
   }, [])
 
   const handleDepartmentChange = useCallback((deptId) => {
@@ -126,6 +133,7 @@ const members = getMembers()
             onDeleteTask={handleDeleteTask}
             onAddTask={handleAddTask}
             onSelectProject={handleSelectProject}
+            onSubtaskClick={handleSubtaskClick}
           />
         )
       case 'subtasks':
@@ -135,6 +143,7 @@ const members = getMembers()
             tasks={filteredTasks}
             onUpdateTask={handleUpdateTask}
             onSelectProject={handleSelectProject}
+            filterTaskId={subtaskFilterTaskId}
           />
         )
       case 'reports':

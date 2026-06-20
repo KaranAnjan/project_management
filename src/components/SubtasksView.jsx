@@ -3,14 +3,24 @@ import { getStatusInfo, getMemberById, getDepartmentById } from '../data/mockDat
 import SubtaskModal from './SubtaskModal'
 import CreateSubtaskModal from './CreateSubtaskModal'
 
-export default function SubtasksView({ projects, tasks, onUpdateTask, onSelectProject }) {
+export default function SubtasksView({ projects, tasks, onUpdateTask, onSelectProject, filterTaskId }) {
   const [selectedSubtask, setSelectedSubtask] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
   const [filterStatus, setFilterStatus] = useState('all')
 
+  const filteredTasks = useMemo(() => {
+    if (!filterTaskId) return tasks
+    return tasks.filter(t => t.id === filterTaskId)
+  }, [tasks, filterTaskId])
+
+  const selectedTask = useMemo(() => {
+    if (!filterTaskId) return null
+    return tasks.find(t => t.id === filterTaskId)
+  }, [tasks, filterTaskId])
+
   const allSubtasks = useMemo(() => {
     const subs = []
-    tasks.forEach(task => {
+    filteredTasks.forEach(task => {
       if (task.subtasks) {
         task.subtasks.forEach(s => {
           const project = projects.find(p => p.id === task.projectId)
@@ -20,7 +30,7 @@ export default function SubtasksView({ projects, tasks, onUpdateTask, onSelectPr
     })
     if (filterStatus !== 'all') return subs.filter(s => s.status === filterStatus)
     return subs
-  }, [tasks, filterStatus, projects])
+  }, [filteredTasks, filterStatus, projects])
 
   const statusCounts = useMemo(() => {
     const counts = { all: allSubtasks.length }
@@ -40,7 +50,7 @@ export default function SubtasksView({ projects, tasks, onUpdateTask, onSelectPr
   return (
     <div className="tasks-view">
       <div className="tasks-view-header">
-        <h2>All Subtasks ({allSubtasks.length})</h2>
+        <h2>{filterTaskId && selectedTask ? `Subtasks: ${selectedTask.title}` : `All Subtasks (${allSubtasks.length})`}</h2>
         <button className="btn btn-primary" onClick={() => setShowCreate(true)}>+ New Subtask</button>
       </div>
 

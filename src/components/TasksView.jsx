@@ -3,7 +3,7 @@ import { getStatusInfo, getPriorityInfo, getMemberById, getDepartmentById, calcT
 import TaskModal from './TaskModal'
 import CreateTaskModal from './CreateTaskModal'
 
-export default function TasksView({ projects, tasks, members, onUpdateTask, onDeleteTask, onAddTask, onSelectProject }) {
+export default function TasksView({ projects, tasks, members, onUpdateTask, onDeleteTask, onAddTask, onSelectProject, onSubtaskClick }) {
   const [selectedTask, setSelectedTask] = useState(null)
   const [selectedSubtask, setSelectedSubtask] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
@@ -143,10 +143,7 @@ export default function TasksView({ projects, tasks, members, onUpdateTask, onDe
                     const subInfo = getStatusInfo(s.status)
                     return (
                       <div key={s.id} className={`subtask-row ${s.status === 'done' ? 'done' : ''}`}
-                        onClick={() => {
-                          const updated = task.subtasks.map(st => st.id === s.id ? { ...st, status: st.status === 'done' ? 'todo' : 'done' } : st)
-                          onUpdateTask(task.id, { subtasks: updated })
-                        }}>
+                        onClick={() => onSubtaskClick(task.id)}>
                         <div className="subtask-row-left">
                           <span className="subtask-row-check">{s.status === 'done' ? '✓' : '○'}</span>
                           <span className="subtask-row-title">{s.title}</span>
