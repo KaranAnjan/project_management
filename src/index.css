@@ -2498,7 +2498,21 @@ a { color: var(--primary); text-decoration: none; }
 .flow-view {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.flow-content {
+  display: flex;
   gap: 20px;
+  align-items: flex-start;
+}
+
+.flow-tree-panel {
+  flex: 1;
+  min-width: 0;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .flow-header {

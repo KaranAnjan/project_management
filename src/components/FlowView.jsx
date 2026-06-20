@@ -48,6 +48,125 @@ export default function FlowView({ projects, tasks }) {
     }
   }
 
+  const renderTree = (items) => (
+    <div className="flow-tree">
+      {items.map((project) => {
+        const statusInfo = getStatusInfo(project.status)
+        const overdue = project.status !== 'completed' && new Date(project.dueDate) < new Date()
+        const expanded = expandedProjects[project.id]
+        return (
+          <div key={project.id} className="flow-branch">
+            <div className="flow-project-node" onClick={() => toggleProject(project.id)}>
+              <span className="flow-toggle">{expanded ? '▾' : '▸'}</span>
+              <div className="flow-project-icon" style={{ background: project.dept?.color || '#6366f1' }}>
+                {project.dept?.icon || '📋'}
+              </div>
+              <div className="flow-project-body">
+                <div className="flow-project-title">{project.title}</div>
+                <div className="flow-project-meta">
+                  <span className={`status-badge ${project.status}`}>{statusInfo.label}</span>
+                  <span className="flow-dept-tag">{project.dept?.name || 'General'}</span>
+                  {overdue && <span className="flow-overdue">OVERDUE</span>}
+                </div>
+              </div>
+              <div className="flow-task-strip">
+                <div className="flow-task-strip-line" />
+                {project.projectTasks.slice(0, 8).map(t => {
+                  const tOverdue = t.status !== 'done' && new Date(t.dueDate) < new Date()
+                  return (
+                    <div key={t.id} className={`flow-task-dot ${t.status}${tOverdue ? ' overdue' : ''}`} data-label={tOverdue ? 'Overdue' : getStatusInfo(t.status).label}>
+                      {t.status === 'done' ? '✓' : t.status === 'in_progress' ? '◉' : t.status === 'review' ? '◎' : ''}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className={`flow-children-wrap ${expanded ? 'expanded' : ''}`}>
+              <div className="flow-children">
+                {project.projectTasks.length === 0 && (
+                  <div className="flow-empty-node">
+                    <span className="flow-empty-text">No tasks</span>
+                  </div>
+                )}
+                {project.projectTasks.map((task) => {
+                  const tStatus = getStatusInfo(task.status)
+                  const tPriority = getPriorityInfo(task.priority)
+                  const member = getMemberById(task.assignee)
+                  const tOverdue = task.status !== 'done' && new Date(task.dueDate) < new Date()
+                  const totalSubs = task.subtaskList.length
+                  const tExpanded = expandedTasks[task.id]
+                  return (
+                    <div key={task.id} className="flow-branch">
+                      <div className="flow-task-node" onClick={() => toggleTask(task.id)}>
+                        <span className="flow-toggle">{tExpanded ? '▾' : '▸'}</span>
+                        <div className="flow-node-dot" style={{ background: tStatus.color }} />
+                        <div className="flow-task-body">
+                          <div className="flow-task-title">{task.title}</div>
+                          <div className="flow-task-meta">
+                            <span className="flow-badge" style={{ background: tStatus.color }}>{tStatus.label}</span>
+                            <span className="flow-badge priority" style={{ background: tPriority.color }}>{tPriority.label}</span>
+                            {member && <span className="flow-member">{member.avatar}</span>}
+                            <span className="flow-date">{new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                            {tOverdue && <span className="flow-overdue-tag">overdue</span>}
+                          </div>
+                        </div>
+                        {totalSubs > 0 && (
+                          <div className="flow-task-strip">
+                            <div className="flow-task-strip-line" />
+                            {task.subtaskList.slice(0, 8).map(sub => {
+                              const sOverdue = sub.status !== 'done' && new Date(sub.dueDate) < new Date()
+                              return (
+                                <div key={sub.id} className={`flow-task-dot ${sub.status}${sOverdue ? ' overdue' : ''}`} data-label={sOverdue ? 'Overdue' : getStatusInfo(sub.status).label}>
+                                  {sub.status === 'done' ? '✓' : sub.status === 'in_progress' ? '◉' : sub.status === 'review' ? '◎' : ''}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className={`flow-children-wrap ${tExpanded ? 'expanded' : ''}`}>
+                        <div className="flow-children">
+                          {totalSubs === 0 && (
+                            <div className="flow-empty-node">
+                              <span className="flow-empty-text">No subtasks</span>
+                            </div>
+                          )}
+                          {task.subtaskList.map(sub => {
+                            const sStatus = getStatusInfo(sub.status)
+                            const sPriority = getPriorityInfo(sub.priority)
+                            const sMember = getMemberById(sub.assignee)
+                            const sOverdue = sub.status !== 'done' && new Date(sub.dueDate) < new Date()
+                            return (
+                              <div key={sub.id} className="flow-subtask-node">
+                                <div className="flow-node-dot small" style={{ background: sStatus.color }} />
+                                <div className="flow-task-body">
+                                  <div className="flow-task-title subtask">{sub.title}</div>
+                                  <div className="flow-task-meta">
+                                    <span className="flow-badge" style={{ background: sStatus.color }}>{sStatus.label}</span>
+                                    <span className="flow-badge priority" style={{ background: sPriority.color }}>{sPriority.label}</span>
+                                    {sMember && <span className="flow-member">{sMember.avatar}</span>}
+                                    <span className="flow-date">{new Date(sub.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                    {sOverdue && <span className="flow-overdue-tag">overdue</span>}
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+
   return (
     <div className="flow-view">
       <div className="flow-header">
@@ -67,121 +186,9 @@ export default function FlowView({ projects, tasks }) {
           <button className="flow-collapse-btn" onClick={collapseAll}>Collapse all</button>
         </div>
       </div>
-      <div className="flow-tree">
-        {tree.map((project) => {
-          const statusInfo = getStatusInfo(project.status)
-          const overdue = project.status !== 'completed' && new Date(project.dueDate) < new Date()
-          const expanded = expandedProjects[project.id]
-          return (
-            <div key={project.id} className="flow-branch">
-              <div className="flow-project-node" onClick={() => toggleProject(project.id)}>
-                <span className="flow-toggle">{expanded ? '▾' : '▸'}</span>
-                <div className="flow-project-icon" style={{ background: project.dept?.color || '#6366f1' }}>
-                  {project.dept?.icon || '📋'}
-                </div>
-                <div className="flow-project-body">
-                  <div className="flow-project-title">{project.title}</div>
-                  <div className="flow-project-meta">
-                    <span className={`status-badge ${project.status}`}>{statusInfo.label}</span>
-                    <span className="flow-dept-tag">{project.dept?.name || 'General'}</span>
-                    {overdue && <span className="flow-overdue">OVERDUE</span>}
-                  </div>
-                </div>
-                <div className="flow-task-strip">
-                  <div className="flow-task-strip-line" />
-                  {project.projectTasks.slice(0, 8).map(t => {
-                    const tOverdue = t.status !== 'done' && new Date(t.dueDate) < new Date()
-                    return (
-                      <div key={t.id} className={`flow-task-dot ${t.status}${tOverdue ? ' overdue' : ''}`} data-label={tOverdue ? 'Overdue' : getStatusInfo(t.status).label}>
-                        {t.status === 'done' ? '✓' : t.status === 'in_progress' ? '◉' : t.status === 'review' ? '◎' : ''}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div className={`flow-children-wrap ${expanded ? 'expanded' : ''}`}>
-                <div className="flow-children">
-                  {project.projectTasks.length === 0 && (
-                    <div className="flow-empty-node">
-                      <span className="flow-empty-text">No tasks</span>
-                    </div>
-                  )}
-                  {project.projectTasks.map((task) => {
-                    const tStatus = getStatusInfo(task.status)
-                    const tPriority = getPriorityInfo(task.priority)
-                    const member = getMemberById(task.assignee)
-                    const tOverdue = task.status !== 'done' && new Date(task.dueDate) < new Date()
-                    const totalSubs = task.subtaskList.length
-                    const tExpanded = expandedTasks[task.id]
-                    return (
-                      <div key={task.id} className="flow-branch">
-                        <div className="flow-task-node" onClick={() => toggleTask(task.id)}>
-                          <span className="flow-toggle">{tExpanded ? '▾' : '▸'}</span>
-                          <div className="flow-node-dot" style={{ background: tStatus.color }} />
-                          <div className="flow-task-body">
-                            <div className="flow-task-title">{task.title}</div>
-                            <div className="flow-task-meta">
-                              <span className="flow-badge" style={{ background: tStatus.color }}>{tStatus.label}</span>
-                              <span className="flow-badge priority" style={{ background: tPriority.color }}>{tPriority.label}</span>
-                              {member && <span className="flow-member">{member.avatar}</span>}
-                              <span className="flow-date">{new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                              {tOverdue && <span className="flow-overdue-tag">overdue</span>}
-                            </div>
-                          </div>
-                          {totalSubs > 0 && (
-                            <div className="flow-task-strip">
-                              <div className="flow-task-strip-line" />
-                              {task.subtaskList.slice(0, 8).map(sub => {
-                                const sOverdue = sub.status !== 'done' && new Date(sub.dueDate) < new Date()
-                                return (
-                                  <div key={sub.id} className={`flow-task-dot ${sub.status}${sOverdue ? ' overdue' : ''}`} data-label={sOverdue ? 'Overdue' : getStatusInfo(sub.status).label}>
-                                    {sub.status === 'done' ? '✓' : sub.status === 'in_progress' ? '◉' : sub.status === 'review' ? '◎' : ''}
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className={`flow-children-wrap ${tExpanded ? 'expanded' : ''}`}>
-                          <div className="flow-children">
-                            {totalSubs === 0 && (
-                              <div className="flow-empty-node">
-                                <span className="flow-empty-text">No subtasks</span>
-                              </div>
-                            )}
-                            {task.subtaskList.map(sub => {
-                              const sStatus = getStatusInfo(sub.status)
-                              const sPriority = getPriorityInfo(sub.priority)
-                              const sMember = getMemberById(sub.assignee)
-                              const sOverdue = sub.status !== 'done' && new Date(sub.dueDate) < new Date()
-                              return (
-                                <div key={sub.id} className="flow-subtask-node">
-                                  <div className="flow-node-dot small" style={{ background: sStatus.color }} />
-                                  <div className="flow-task-body">
-                                    <div className="flow-task-title subtask">{sub.title}</div>
-                                    <div className="flow-task-meta">
-                                      <span className="flow-badge" style={{ background: sStatus.color }}>{sStatus.label}</span>
-                                      <span className="flow-badge priority" style={{ background: sPriority.color }}>{sPriority.label}</span>
-                                      {sMember && <span className="flow-member">{sMember.avatar}</span>}
-                                      <span className="flow-date">{new Date(sub.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                      {sOverdue && <span className="flow-overdue-tag">overdue</span>}
-                                    </div>
-                                  </div>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-          )
-        })}
+      <div className="flow-content">
+        <div className="flow-tree-panel">{renderTree(tree.slice(0, Math.ceil(tree.length / 2)))}</div>
+        <div className="flow-tree-panel">{renderTree(tree.slice(Math.ceil(tree.length / 2)))}</div>
       </div>
     </div>
   )
